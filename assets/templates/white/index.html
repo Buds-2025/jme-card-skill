@@ -1,0 +1,841 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="white-ink">
+<head>
+  <meta charset="utf-8">
+  <title>Vertical Snippet Library</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;600&family=Inter:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <style>
+    :root,
+    [data-theme="white-ink"] {
+      --paper: #f8f7f3;
+      --paper-2: #efede6;
+      --ink: #111111;
+      --muted: #6c6962;
+      --line: rgba(17,17,17,.18);
+      --accent: #111111;
+      --accent-soft: #dedbd2;
+      --editorial-red: #c1121f;
+      --paper-rgb: 248,247,243;
+      --ink-rgb: 17,17,17;
+    }
+    [data-theme="midnight-magazine"] {
+      --paper: #11100e;
+      --paper-2: #1b1916;
+      --ink: #f1eadc;
+      --muted: #a79d8f;
+      --line: rgba(241,234,220,.20);
+      --accent: #c7a15a;
+      --accent-soft: #332817;
+      --editorial-red: #c1121f;
+      --paper-rgb: 17,16,14;
+      --ink-rgb: 241,234,220;
+    }
+
+
+    :root {
+      --serif-zh: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "STSong", serif;
+      --sans-zh: "Noto Sans SC", -apple-system, "PingFang SC", "Microsoft YaHei UI", sans-serif;
+      --sans-en: "Inter", "Helvetica Neue", Arial, sans-serif;
+      --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Consolas, monospace;
+      --jp-baseline: 8px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      background: #202020;
+      font-family: var(--sans-zh);
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+      padding: 64px 32px;
+    }
+    .sheet {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 48px;
+    }
+    .poster {
+      position: relative;
+      background: var(--paper);
+      color: var(--ink);
+      overflow: hidden;
+      isolation: isolate;
+      --jp-safe-x: 88px;
+      --jp-safe-top: 92px;
+      --jp-safe-bottom: 84px;
+      --jp-grid-gap: 28px;
+      --jp-row-gap: 32px;
+    }
+    .poster.vertical { width: 1080px; height: 1440px; }
+    .poster.square {
+      width: 1080px;
+      height: 1080px;
+      --jp-safe-x: 84px;
+      --jp-safe-top: 84px;
+      --jp-safe-bottom: 84px;
+      --jp-grid-gap: 24px;
+      --jp-row-gap: 28px;
+    }
+    .poster figure { margin: 0; }
+    .content { position: relative; z-index: 2; width: 100%; height: 100%; }
+    .poster.vertical .content { padding: var(--jp-safe-top) var(--jp-safe-x) var(--jp-safe-bottom); }
+    .poster.square .content { padding: var(--jp-safe-top) var(--jp-safe-x) var(--jp-safe-bottom); }
+
+    .paper-grain {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      opacity: .22;
+      background-image: radial-gradient(rgba(var(--ink-rgb),.12) .8px, transparent .8px);
+      background-size: 4px 4px;
+      mix-blend-mode: multiply;
+    }
+    [data-theme="midnight-magazine"] .paper-grain {
+      opacity: .18;
+      mix-blend-mode: screen;
+      background-image: radial-gradient(rgba(255,245,220,.16) .8px, transparent .8px);
+    }
+    /* Midnight overrides: 提亮细线与说明文字,让暗色背景下的边界和元数据仍可读 */
+    [data-theme="midnight-magazine"] .jp-rule { background: rgba(241,234,220,.32); }
+    [data-theme="midnight-magazine"] .jp-page-header,
+    [data-theme="midnight-magazine"] .jp-page-footer { border-color: rgba(241,234,220,.26); }
+    [data-theme="midnight-magazine"] .jp-list,
+    [data-theme="midnight-magazine"] .jp-list-row { border-color: rgba(241,234,220,.22); }
+    [data-theme="midnight-magazine"] .jp-list-num { color: var(--accent); font-weight: 600; }
+    [data-theme="midnight-magazine"] .jp-meta,
+    [data-theme="midnight-magazine"] .jp-cap,
+    [data-theme="midnight-magazine"] .jp-issue { color: rgba(241,234,220,.66); }
+    [data-theme="midnight-magazine"] .jp-detail-micro-copy { color: rgba(241,234,220,.78); }
+    [data-theme="midnight-magazine"] .jp-frame-inset,
+    [data-theme="midnight-magazine"] .jp-frame-box { border-color: rgba(241,234,220,.32); box-shadow: none; }
+    [data-theme="midnight-magazine"] .jp-rail-left,
+    [data-theme="midnight-magazine"] .jp-rail-right,
+    [data-theme="midnight-magazine"] .jp-rail-top,
+    [data-theme="midnight-magazine"] .jp-rail-bottom { border-color: rgba(241,234,220,.28); }
+    [data-theme="midnight-magazine"] .poster { box-shadow: inset 0 0 0 1px rgba(241,234,220,.06); }
+
+    .stack { display: flex; flex-direction: column; }
+    .row { display: flex; flex-direction: row; }
+    .grow { flex: 1; }
+    .gap-1 { gap: 12px; }
+    .gap-2 { gap: 20px; }
+    .gap-3 { gap: 32px; }
+    .gap-4 { gap: 48px; }
+    .gap-5 { gap: 64px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+    .col-main-side { display: grid; grid-template-columns: 1fr 210px; gap: 46px; }
+    .col-side-main { display: grid; grid-template-columns: 210px 1fr; gap: 46px; }
+    .jp-grid {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: var(--jp-grid-gap);
+      row-gap: var(--jp-row-gap);
+      align-content: start;
+    }
+    .content.jp-grid { height: 100%; }
+    .jp-page-grid {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      column-gap: var(--jp-grid-gap);
+      row-gap: var(--jp-row-gap);
+      height: 100%;
+      align-content: stretch;
+    }
+    .content.jp-page-grid { height: 100%; }
+    .jp-page-header,
+    .jp-page-footer {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      min-width: 0;
+    }
+    .jp-page-header {
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 16px;
+    }
+    .jp-page-main {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: var(--jp-grid-gap);
+      row-gap: var(--jp-row-gap);
+      align-content: start;
+      min-height: 0;
+    }
+    .jp-page-main.fill {
+      align-content: stretch;
+    }
+    .jp-main-balance-center {
+      align-content: center;
+    }
+    .jp-main-balance-lower {
+      align-content: center;
+      padding-top: 56px;
+    }
+    .poster.square .jp-main-balance-lower {
+      padding-top: 24px;
+    }
+    .jp-page-footer {
+      border-top: 1px solid var(--line);
+      padding-top: 16px;
+      align-self: end;
+    }
+    .jp-measure { min-width: 0; }
+    .jp-measure-narrow { max-width: 560px; }
+    .jp-measure-medium { max-width: 720px; }
+    .jp-measure-large { max-width: 904px; }
+    .jp-align-group { min-width: 0; }
+    .jp-pair-lock { min-width: 0; }
+    .jp-title-lock {
+      overflow-wrap: normal;
+      word-break: keep-all;
+    }
+    .jp-title-zone,
+    .jp-template-title-zone,
+    .jp-template-quote-zone,
+    .jp-template-detail-zone,
+    .jp-photo-zone,
+    .jp-english-zone,
+    .jp-caption-zone,
+    .jp-meta-zone,
+    .jp-footer-left,
+    .jp-footer-right {
+      min-width: 0;
+    }
+    .jp-footer-right { text-align: right; }
+    .jp-template-title-zone,
+    .jp-template-quote-zone,
+    .jp-template-detail-zone {
+      min-width: 0;
+    }
+    .jp-template-title-zone {
+      display: block;
+    }
+    .jp-template-quote-zone {
+      display: block;
+    }
+    .jp-template-detail-zone {
+      display: block;
+    }
+    .jp-template-detail-zone .jp-list-note,
+    .jp-template-detail-zone .jp-body,
+    .jp-template-detail-zone .jp-cap {
+      max-width: 100%;
+    }
+    .jp-detail-micro-heading {
+      font-family: var(--mono);
+      font-size: 16px;
+      font-weight: 500;
+      line-height: 1.35;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0;
+    }
+    .jp-detail-micro-copy {
+      font-family: var(--serif-zh);
+      font-size: 18px;
+      line-height: 1.62;
+      letter-spacing: .015em;
+      color: rgba(var(--ink-rgb),.76);
+      margin: 10px 0 0;
+    }
+    .jp-detail-micro-copy.en,
+    .jp-detail-micro-copy.ja {
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.55;
+      letter-spacing: .05em;
+      color: var(--muted);
+    }
+    .jp-grid-span-1 { grid-column: span 1; }
+    .jp-grid-span-2 { grid-column: span 2; }
+    .jp-grid-span-3 { grid-column: span 3; }
+    .jp-grid-span-4 { grid-column: span 4; }
+    .jp-grid-span-5 { grid-column: span 5; }
+    .jp-grid-span-6 { grid-column: span 6; }
+    .jp-grid-span-7 { grid-column: span 7; }
+    .jp-grid-span-8 { grid-column: span 8; }
+    .jp-grid-span-9 { grid-column: span 9; }
+    .jp-grid-span-10 { grid-column: span 10; }
+    .jp-grid-span-11 { grid-column: span 11; }
+    .jp-grid-span-12 { grid-column: 1 / -1; }
+    .jp-grid-start-1 { grid-column-start: 1; }
+    .jp-grid-start-2 { grid-column-start: 2; }
+    .jp-grid-start-3 { grid-column-start: 3; }
+    .jp-grid-start-4 { grid-column-start: 4; }
+    .jp-grid-start-5 { grid-column-start: 5; }
+    .jp-grid-start-6 { grid-column-start: 6; }
+    .jp-grid-start-7 { grid-column-start: 7; }
+    .jp-grid-start-8 { grid-column-start: 8; }
+    .jp-grid-start-9 { grid-column-start: 9; }
+    .jp-grid-start-10 { grid-column-start: 10; }
+    .jp-grid-start-11 { grid-column-start: 11; }
+    .jp-grid-start-12 { grid-column-start: 12; }
+    .center { text-align: center; }
+    .right { text-align: right; }
+
+    .jp-title-hero {
+      font-family: var(--serif-zh);
+      font-size: 112px;
+      font-weight: 500;
+      line-height: 1.08;
+      letter-spacing: .04em;
+      margin: 0;
+      color: var(--ink);
+    }
+    .jp-title-xl {
+      font-family: var(--serif-zh);
+      font-size: 84px;
+      font-weight: 500;
+      line-height: 1.12;
+      letter-spacing: .035em;
+      margin: 0;
+      color: var(--ink);
+    }
+    .jp-title-md {
+      font-family: var(--serif-zh);
+      font-size: 48px;
+      font-weight: 500;
+      line-height: 1.18;
+      letter-spacing: .025em;
+      margin: 0;
+      color: var(--ink);
+    }
+    .jp-lead {
+      font-family: var(--serif-zh);
+      font-size: 30px;
+      font-weight: 400;
+      line-height: 1.55;
+      letter-spacing: .02em;
+      margin: 0;
+      color: rgba(var(--ink-rgb),.86);
+    }
+    .jp-body {
+      font-family: var(--serif-zh);
+      font-size: 26px;
+      font-weight: 400;
+      line-height: 1.65;
+      letter-spacing: .015em;
+      margin: 0;
+      color: rgba(var(--ink-rgb),.82);
+    }
+    .jp-meta,
+    .jp-cap,
+    .jp-page,
+    .jp-issue {
+      font-family: var(--mono);
+      font-size: 18px;
+      font-weight: 500;
+      line-height: 1.45;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+      margin: 0;
+      color: var(--muted);
+    }
+    .jp-page { font-size: 20px; color: var(--accent); }
+    .jp-v-title {
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      font-family: var(--serif-zh);
+      font-size: 40px;
+      font-weight: 500;
+      letter-spacing: .12em;
+      line-height: 1.25;
+      color: var(--ink);
+    }
+    .jp-vertical-page .jp-vertical-main,
+    [data-vertical-layout="true"] .jp-vertical-main {
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      align-content: start;
+      justify-content: end;
+    }
+    .jp-vertical-page .jp-vertical-main > *,
+    [data-vertical-layout="true"] .jp-vertical-main > * {
+      min-height: 0;
+      min-width: 0;
+    }
+    .jp-rule { height: 1px; background: var(--line); border: 0; margin: 0; }
+    .jp-rule-accent { height: 2px; background: var(--accent); border: 0; width: 84px; margin: 0; }
+    .jp-rule-red { height: 2px; background: var(--editorial-red); border: 0; width: 84px; margin: 0; }
+    .jp-v-rule { width: 1px; background: var(--line); align-self: stretch; }
+    .jp-v-rule-red { width: 2px; background: var(--editorial-red); align-self: stretch; }
+    .jp-rail-left { border-left: 1px solid var(--line); padding-left: 24px; }
+    .jp-rail-right { border-right: 1px solid var(--line); padding-right: 24px; }
+    .jp-rail-top { border-top: 1px solid var(--line); padding-top: 20px; }
+    .jp-rail-bottom { border-bottom: 1px solid var(--line); padding-bottom: 20px; }
+    .jp-rail-red-left { border-left: 2px solid var(--editorial-red); padding-left: 24px; }
+    .jp-rail-red-right { border-right: 2px solid var(--editorial-red); padding-right: 24px; }
+
+    .jp-photo,
+    .jp-shot {
+      position: relative;
+      overflow: hidden;
+      background: var(--paper-2);
+      display: block;
+      margin: 0;
+    }
+    .jp-photo-zone { width: 100%; max-width: 100%; }
+    .jp-photo img,
+    .jp-shot img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-position: center 50%;
+    }
+    .jp-photo img { object-fit: cover; }
+    .jp-photo.fit-contain img,
+    .jp-photo img.fit-contain { object-fit: contain; }
+    .jp-shot img { object-fit: contain; }
+    .r-3x4 { aspect-ratio: 3 / 4; }
+    .r-1x1 { aspect-ratio: 1 / 1; }
+    .r-4x3 { aspect-ratio: 4 / 3; }
+    .r-3x2 { aspect-ratio: 3 / 2; }
+    .jp-frame-line { box-shadow: 0 0 0 1px var(--line); }
+    .jp-frame-box {
+      border: 1px solid var(--line);
+      padding: 24px;
+    }
+    .jp-frame-red {
+      border: 2px solid var(--editorial-red);
+      padding: 24px;
+    }
+    .jp-frame-inset {
+      box-shadow: inset 0 0 0 1px var(--line);
+      padding: 24px;
+    }
+    .jp-corner-mark {
+      position: relative;
+    }
+    .jp-corner-mark::before,
+    .jp-corner-mark::after {
+      content: "";
+      position: absolute;
+      width: 28px;
+      height: 28px;
+      pointer-events: none;
+    }
+    .jp-corner-mark::before {
+      top: 0;
+      left: 0;
+      border-top: 2px solid var(--editorial-red);
+      border-left: 2px solid var(--editorial-red);
+    }
+    .jp-corner-mark::after {
+      right: 0;
+      bottom: 0;
+      border-right: 2px solid var(--editorial-red);
+      border-bottom: 2px solid var(--editorial-red);
+    }
+    .jp-red-mark { color: var(--editorial-red); border-color: var(--editorial-red); }
+    .jp-red-anchor { color: var(--editorial-red); border-color: var(--editorial-red); }
+    .jp-red-text {
+      color: var(--editorial-red);
+      font-weight: 500;
+    }
+
+    .jp-issue-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 16px;
+    }
+    .jp-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid var(--line);
+      padding-top: 16px;
+      margin-top: auto;
+    }
+    .jp-side-label {
+      position: absolute;
+      top: 92px;
+      right: 42px;
+      writing-mode: vertical-rl;
+      font-family: var(--mono);
+      font-size: 16px;
+      letter-spacing: .18em;
+      color: var(--muted);
+      z-index: 3;
+    }
+    .jp-seal {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 72px;
+      height: 72px;
+      border: 2px solid var(--accent);
+      color: var(--accent);
+      font-family: var(--serif-zh);
+      font-size: 22px;
+      line-height: 1.15;
+      letter-spacing: .08em;
+    }
+
+    [data-theme="white-ink"] .jp-seal { border-color: var(--ink); color: var(--ink); }
+    [data-theme="midnight-magazine"] .jp-seal { border-color: var(--accent); color: var(--accent); }
+
+    .jp-list { display: flex; flex-direction: column; border-top: 1px solid var(--line); }
+    .jp-list-row {
+      display: grid;
+      grid-template-columns: 72px 1fr;
+      gap: 24px;
+      padding: 24px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .jp-list-num {
+      font-family: var(--mono);
+      font-size: 22px;
+      color: var(--accent);
+      margin: 0;
+    }
+    .jp-list-row .jp-list-num {
+      line-height: 1.25;
+      padding-top: 9px;
+    }
+    .jp-list-kicker {
+      font-family: var(--mono);
+      font-size: 18px;
+      line-height: 1.45;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0;
+    }
+    .jp-list-wordmark {
+      font-family: var(--serif-zh);
+      font-size: 28px;
+      line-height: 1.24;
+      letter-spacing: .025em;
+      color: var(--ink);
+      margin: 0;
+    }
+    .jp-list-rhythm {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 22px 0;
+    }
+    .jp-list-divider {
+      height: 1px;
+      background: var(--line);
+      border: 0;
+      margin: 0;
+    }
+    .jp-list-title {
+      font-family: var(--serif-zh);
+      font-size: 34px;
+      font-weight: 500;
+      line-height: 1.25;
+      margin: 0 0 8px;
+    }
+    .jp-list-note {
+      font-family: var(--serif-zh);
+      font-size: 23px;
+      line-height: 1.55;
+      margin: 0;
+      color: rgba(var(--ink-rgb),.76);
+    }
+
+    .jp-aphorism-block {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 560px;
+      padding: 42px 0;
+    }
+    .jp-aphorism-main {
+      font-family: var(--serif-zh);
+      font-size: 78px;
+      font-weight: 500;
+      line-height: 1.16;
+      letter-spacing: .04em;
+      margin: 0;
+      color: var(--ink);
+    }
+    .jp-aphorism-main.compact {
+      font-size: 64px;
+      line-height: 1.18;
+      letter-spacing: .035em;
+    }
+    .jp-aphorism-secondary {
+      font-family: var(--serif-zh);
+      font-size: 32px;
+      font-weight: 400;
+      line-height: 1.55;
+      letter-spacing: .025em;
+      color: rgba(var(--ink-rgb),.72);
+      margin: 0;
+    }
+    .pair-preview {
+      width: 2400px;
+      min-height: 1180px;
+      background: #2a2a2a;
+      padding: 80px;
+      display: grid;
+      grid-template-columns: 1fr 520px;
+      gap: 48px;
+      align-items: start;
+    }
+    .pair-preview .preview-square {
+      background: var(--paper);
+      color: var(--ink);
+      overflow: hidden;
+      position: relative;
+    }
+    .pair-preview .preview-square { width: 520px; height: 520px; }
+
+    .poster.square .jp-title-hero { font-size: 96px; }
+    .poster.square .jp-title-xl { font-size: 74px; }
+  </style>
+</head>
+<body>
+  <main class="sheet">
+    <section id="vertical-01" class="poster vertical" data-template-id="vertical-photo-story-notes" data-template-source="assets/snippets/vertical/index.html#vertical-photo-story-notes" data-template-role="feature" data-page-role="feature" data-j-recipe="J03" data-text-mass="dense lower story columns" data-image-mass="large scene image" data-visual-center="slightly lower" data-index-logic="none" data-risk-note="high core must still breathe" data-export-name="vertical-01-vertical-photo-story-notes.png">
+  <div class="paper-grain"></div><div class="content jp-page-grid">
+    <header class="jp-page-header"><p class="jp-issue">整组图主题</p><p class="jp-page jp-red-mark">01 / 8</p></header>
+    <main class="jp-page-main jp-main-balance-lower"><div class="jp-grid-span-12 jp-template-title-zone" data-text-zone="title" style="display:grid;grid-template-columns:7fr 5fr;gap:28px;align-items:end;margin-bottom:22px" data-slot-id="vertical-01-title-1" data-copy-budget="4-18" data-max-lines="2" data-no-orphan-line="true"><div><p class="jp-meta jp-red-mark">FEATURE TITLE</p><h2 class="jp-title-xl jp-title-lock" style="margin-top:14px;font-size:64px">主题大标题承载区。</h2></div><p class="jp-cap jp-english-zone" style="justify-self:end;text-align:right;max-width:340px">A quiet opening title with one editorial English line.</p></div><!-- subject map:
+       primary subject: large lifestyle scene
+       protected details: full abstract editorial placeholder
+       quiet zones: edges and captions
+       crop risks: none in generated template preview
+       chosen fit: cover
+       chosen object-position: center 50%
+       relation id: large-lifestyle-scene
+       text relation: high core image carries the story
+  -->
+  <figure class="jp-photo-zone jp-grid-span-12 jp-photo r-4x3 jp-pair-lock" data-image-role="proof" data-relation-id="large-lifestyle-scene" data-frame-ratio="free" data-fit-decision="cover" style="height:560px" data-slot-id="large-lifestyle-scene" data-fit="cover" data-safe-focus="center 50%">
+    <img alt="" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201200%20900%22%3E%0A%20%20%20%20%3Crect%20width%3D%221200%22%20height%3D%22900%22%20fill%3D%22%23dedbd2%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%22120%22%20y1%3D%22780%22%20x2%3D%221080%22%20y2%3D%22780%22%20stroke%3D%22%23111%22%20stroke-opacity%3D%22.22%22%20stroke-width%3D%222%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M120%20650H980M160%20240H820%22%20stroke%3D%22%23111%22%20stroke-opacity%3D%22.28%22%20stroke-width%3D%2214%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%22900%22%20cy%3D%22280%22%20r%3D%22120%22%20fill%3D%22%23111%22%20fill-opacity%3D%22.10%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%22120%22%20y%3D%22120%22%20width%3D%2254%22%20height%3D%22160%22%20fill%3D%22%23c1121f%22%20fill-opacity%3D%22.72%22%2F%3E%0A%20%20%20%20%3Ctext%20x%3D%22120%22%20y%3D%22805%22%20font-family%3D%22serif%22%20font-size%3D%2262%22%20fill%3D%22%23111%22%20fill-opacity%3D%22.45%22%3Elarge%20lifestyle%20scene%3C%2Ftext%3E%0A%20%20%3C%2Fsvg%3E" style="object-position:center 50%">
+  </figure><div class="jp-grid-span-12" style="display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:22px"><div class="jp-template-detail-zone" data-text-zone="detail" data-slot-id="vertical-01-detail-1" data-copy-budget="18-90" data-max-lines="6" data-no-orphan-line="true"><p class="jp-detail-micro-heading jp-red-mark">CONTEXT</p><p class="jp-detail-micro-copy">小标题下方承载较多说明文字。</p><p class="jp-detail-micro-copy en">Detail zone supports source, context, critique, or bilingual notes.</p></div><div class="jp-template-detail-zone" data-text-zone="detail" data-slot-id="vertical-01-detail-2" data-copy-budget="18-90" data-max-lines="6" data-no-orphan-line="true"><p class="jp-detail-micro-heading jp-red-mark">READING</p><p class="jp-detail-micro-copy">三个文本框是平级信息组。</p><p class="jp-detail-micro-copy en">Detail zone supports source, context, critique, or bilingual notes.</p></div><div class="jp-template-detail-zone" data-text-zone="detail" data-slot-id="vertical-01-detail-3" data-copy-budget="18-90" data-max-lines="6" data-no-orphan-line="true"><p class="jp-detail-micro-heading jp-red-mark">NOTES</p><p class="jp-detail-micro-copy">详细内容由内容规划提供。</p><p class="jp-detail-micro-copy en">Detail zone supports source, context, critique, or bilingual notes.</p></div></div></main>
+    <footer class="jp-page-footer"><p class="jp-meta">J01 / 大图生活叙事</p><p class="jp-page jp-red-mark">01 / 8</p></footer>
+  </div>
+</section>
+
+<section id="vertical-02" class="poster vertical" data-template-id="vertical-single-photo-headline" data-template-source="assets/snippets/vertical/index.html#vertical-single-photo-headline" data-template-role="feature" data-page-role="feature" data-j-recipe="J03" data-text-mass="short thesis plus caption" data-image-mass="dominant image" data-visual-center="slightly lower" data-index-logic="none" data-risk-note="photo must carry evidence" data-export-name="vertical-02-vertical-single-photo-headline.png">
+  <div class="paper-grain"></div><div class="content jp-page-grid">
+    <header class="jp-page-header"><p class="jp-issue">整组图主题</p><p class="jp-page jp-red-mark">02 / 8</p></header>
+    <main class="jp-page-main jp-main-balance-center"><!-- subject map:
+       primary subject: single photo feature
+       protected details: full abstract editorial placeholder
+       quiet zones: edges and captions
+       crop risks: none in generated template preview
+       chosen fit: cover
+       chosen object-position: center 50%
+       relation id: single-photo-feature
+       text relation: dominant image sets the reading mood before the headline
+  -->
+  <figure class="jp-photo-zone jp-photo r-3x2 jp-pair-lock" data-image-role="proof" data-relation-id="single-photo-feature" data-frame-ratio="free" data-fit-decision="cover" style="grid-column:1 / span 10;height:500px" data-slot-id="single-photo-feature" data-fit="cover" data-safe-focus="center 50%">
+    <img alt="" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201200%20900%22%3E%0A%20%20%20%20%3Crect%20width%3D%221200%22%20height%3D%22900%22%20fill%3D%22%23dedbd2%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%22120%22%20y1%3D%22780%22%20x2%3D%221080%22%20y2%3D%22780%22%20stroke%3D%22%23111%22%20stroke-opacity%3D%22.22%22%20stroke-width%3D%222%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M120%20650H980M160%20240H820%22%20stroke%3D%22%23111%22%20stroke-opacity%3D%22.28%22%20stroke-width%3D%2214%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%22900%22%20cy%3D%22280%22%20r%3D%22120%22%20fill%3D%22%23111%22%20fill-opacity%3D%22.10%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%22120%22%20y%3D%22120%22%20width%3D%2254%22%20height%3D%22160%22%20fill%3D%22%23c1121f%22%20fill-opacity%3D%22.72%22%2F%3E%0A%20%20%20%20%3Ctext%20x%3D%22120%22%20y%3D%22805%22%20font-family%3D%22serif%22%20font-size%3D%2262%22%20fill%3D%22%23111%22%20fill-opacity%3D%22.45%22%3Esingle%20photo%20feature%3C%2Ftext%3E%0A%20%20%3C%2Fsvg%3E" style="object-position:center 50%">
+  </figure><div style="grid-column:1 / span 10"><div class="jp-template-title-zone" data-text-zone="title" data-slot-id="vertical-02-title-1" data-copy-budget="4-18" data-max-lines="2" data-no-orphan-line="true"><p class="jp-meta jp-red-mark">PHOTO FEATURE</p><h2 class="jp-title-xl jp-title-lock" style="margin-top:18px;font-size:70px">一张图先说话</h2></div><div class="jp-template-quote-zone" data-text-zone="golden-quote" data-slot-id="vertical-02-golden-quote-1" data-copy-budget="8-36" data-max-lines="3" data-no-orphan-line="true"><p class="jp-body" style="margin-top:16px;max-width:760px">金句区先给读者一个明确判断。</p></div><div class="jp-template-detail-zone" data-text-zone="detail" data-slot-id="vertical-02-detail-1" data-copy-budget="18-90" data-max-lines="6" data-no-orphan-line="true"><p class="jp-cap jp-english-zone" style="margin-top:12px;max-width:760px">Detail zone supports context, notes, or bilingual source text.</p></div></div></main>
+    <footer class="jp-page-footer"><p class="jp-meta">J02 / 一张图先说话</p><p class="jp-page jp-red-mark">02 / 8</p></footer>
+  </div>
+</section>
+
+<section id="vertical-03" class="poster vertical" data-template-id="vertical-object-grid-grouping" data-template-source="assets/snippets/vertical/index.html#vertical-object-grid-grouping" data-template-role="object list" data-page-role="object list" data-j-recipe="J05" data-text-mass="compact object notes" data-image-mass="repeated object grid" data-visual-center="center" data-index-logic="hierarchy" data-risk-note="numbers must mean category hierarchy" data-export-name="vertical-03-vertical-object-grid-grouping.png">
+  <div class="paper-grain"></div><div class="content jp-page-grid">
+    <header class="jp-page-header"><p class="jp-issue">整组图主题</p><p class="jp-page jp-red-mark">03 / 8</p></header>
+    <main class="jp-page-main" style="align-content:start;padding-top:236px;row-gap:18px"><div class="jp-grid-span-12"><div class="jp-template-title-zone" data-text-zone="title" data-slot-id="vertical-03-title-1" data-copy-budget="4-18" data-max-lines="2" data-no-orphan-line="true"><p class="jp-meta jp-red-mark">GROUPING</p><h2 class="jp-title-md jp-title-lock" style="margin-top:10px">同类物件分组</h2></div><div class="jp-template-quote-zone" data-text-zone="golden-quote" data-slot-id="vertical-03-golden-quote-1" data-copy-budget="8-36" data-max-lines="3" data-no-orphan-line="true"><p class="jp-body" style="margin-top:12px;max-width:680px">金句区只说明分组逻辑。</p></div></div><div class="jp-grid-span-12" style="display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:216px;gap:14px"><div class="jp-frame-inset"><!-- subject map:
+       primary subject: object group 1
+       protected details: full abstract editorial placeholder
+       quiet zones: edges and captions
+       crop risks: none in generated template preview
+       chosen fit: cover
+       chosen object-position: center 50%
+       relation id: object-group-1
+       text relation: image and short title are one grouped unit
+  -->
+  <figure class="jp-photo-zone jp-photo r-1x1 jp-pair-lock" data-image-role="proof" data-relation-id="object-group-1" data-frame-ratio="free" data-fit-decision="cover" style="height:120px" data-slot-id="object-group-1" data-fit="cover" data-safe-focus="center 50%">
+    <img alt="" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201200%20900%22%3E%0A%20%20%20%20%3Crect%20width%3D%221200%22%20height%3D%22900%22%20fill%3D%22%23dedbd2%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%22120%22%20y1%3D%22780%22%20x2%3D%221080%22%20y2%3D%22780%22%20stroke%3D%22%23111%22%20stroke-opacity%3D%22.22%22%20stroke-width%3D%222%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M120%20650H980M160%20240H820%22%20stroke%3D%22%23111%22%20stroke-opacity%3D%22.28%22%20stroke-width%3D%2214%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%22900%22%20cy%3D%22280%22%20r%3D%22120%22%20fill%3D%22%23111%22%20fill-opacity%3D%22.10%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%22120%22%20y%3D%22120%22%20width%3D%2254%22%20height%3D%22160%22%20fill%3D%22%23c1121f%22%20fill-opacity%3D%22.72%22%2F%3E%0A%20%20%20%20%3Ctext%20x%3D%22120%22%20y%3D%22805%22%20font-family%3D%22serif%22%20font-size%3D%2262%22%20fill%3D%22%23111%22%20fill-opacity%3D%22.45%22%3Eobject%20group%201%3C%2Ftext%3E%0A%20%20%3C%2Fsvg%3E" style="object-position:center 50%">
+  </figure><p class="jp-list-kicker jp-red-mark jp-english-zone" style="margin-top:10px">GROUP 1</p><p class="jp-list-note">物件分组。</p></div><div class="jp-frame-inset"><!-- subject map:
+       primary subject: object group 2
+       protected details: full abstract editorial placeholder
+       quiet zones: edges and captions
+       crop risks: none in generated template preview
+       chosen fit: cover
+       chosen object-position: center 50%
+       relation id: object-group-2
+       text relation: image and short title are one grouped unit
+  -->
+  <figure class="jp-photo-zone jp-photo r-1x1 jp-pair-lock" data-image-role="proof" data-relation-id="object-group-2" data-frame-ratio="free" data-fit-decision="cover" style="height:120px" data-slot-id="object-group-2" data-fit="cover" data-safe-focus="center 50%">
+    <img alt="" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201200%20900%22%3E%0A%20%20%20%20%3Crect%20width%3D%221200%22%20height%3D%22900%22%20fill%3D%22%23dedbd2%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%22120%22%20y1%3D%22780%22%20x2%3D%221080%22%20y2%3D%22780%22%20stroke%3D%22%23111%22%20stroke-opacity%3D%22.22%22%20stroke-width%3D%222%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M120%20650H980M160%20240H820%22%20stroke%3D%22%23111%22%20stroke-opacity%3D%22.28%22%20stroke-width%3D%2214%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%22900%22%20cy%3D%22280%22%20r%3D%22120%22%20fill%3D%22%23111%22%20fill-opacity%3D%22.10%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%22120%22%20y%3D%22120%22%20width%3D%2254%22%20height%3D%22160%22%20fill%3D%22%23c1121f%22%20fill-opacity%3D%22.72%22%2F%3E%0A%20%20%20%20%3Ctext%20x%3D%22120%22%20y%3D%22805%22%20font-family%3D%22serif%22%20font-size%3D%2262%22%20fill%3D%22%23111%22%20fill-opacity%3D%22.45%22%3Eobject%20group%202%3C%2Ftext%3E%0A%20%20%3C%2Fsvg%3E" style="object-position:center 50%">
+  </figure><p class="jp-list-kicker jp-red-mark jp-english-zone" style="margin-top:10px">GROUP 2</p><p class="jp-list-note">物件分组。</p></div><div class="jp-frame-inset"><!-- subject map:
+       primary subject: object group 3
+       protected details: full abstract editorial placeholder
+       quiet zones: edges and captions
+       crop risks: none in generated template preview
+       chosen fit: cover
+       chosen object-position: center 50%
+       relation id: object-group-3
+       text relation: image and short title are one grouped unit
+  -->
+  <figure class="jp-photo-zone jp-photo r-1x1 jp-pair-lock" data-image-role="proof" data-relation-id="object-group-3" data-frame-ratio="free" data-fit-decision="cover" style="height:120px" data-slot-id="object-group-3" data-fit="cover" data-safe-focus="center 50%">
+    <img alt="" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201200%20900%22%3E%0A%20%20%20%20%3Crect%20width%3D%221200%22%20height%3D%22900%22%20fill%3D%22%23dedbd2%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%22120%22%20y1%3D%22780%22%20x2%3D%221080%22%20y2%3D%22780%22%20stroke%3D%22%23111%22%20stroke-opacity%3D%22.22%22%20stroke-width%3D%222%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M120%20650H980M160%20240H820%22%20stroke%3D%22%23111%22%20stroke-opacity%3D%22.28%22%20stroke-width%3D%2214%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%22900%22%20cy%3D%22280%22%20r%3D%22120%22%20fill%3D%22%23111%22%20fill-opacity%3D%22.10%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%22120%22%20y%3D%22120%22%20width%3D%2254%22%20height%3D%22160%22%20fill%3D%22%23c1121f%22%20fill-opacity%3D%22.72%22%2F%3E%0A%20%20%20%20%3Ctext%20x%3D%22120%22%20y%3D%22805%22%20font-family%3D%22serif%22%20font-size%3D%2262%22%20fill%3D%22%23111%22%20fill-opacity%3D%22.45%22%3Eobject%20group%203%3C%2Ftext%3E%0A%20%20%3C%2Fsvg%3E" style="object-position:center 50%">
+  </figure><p class="jp-list-kicker jp-red-mark jp-english-zone" style="margin-top:10px">GROUP 3</p><p class="jp-list-note">物件分组。</p></div><div class="jp-frame-inset"><!-- subject map:
+       primary subject: object group 4
+       protected details: full abstract editorial placeholder
+       quiet zones: edges and captions
+       crop risks: none in generated template preview
+       chosen fit: cover
+       chosen object-position: center 50%
+       relation id: object-group-4
+       text relation: image and short title are one grouped unit
+  -->
+  <figure class="jp-photo-zone jp-photo r-1x1 jp-pair-lock" data-image-role="proof" data-relation-id="object-group-4" data-frame-ratio="free" data-fit-decision="cover" style="height:120px" data-slot-id="object-group-4" data-fit="cover" data-safe-focus="center 50%">
+    <img alt="" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201200%20900%22%3E%0A%20%20%20%20%3Crect%20width%3D%221200%22%20height%3D%22900%22%20fill%3D%22%23dedbd2%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%22120%22%20y1%3D%22780%22%20x2%3D%221080%22%20y2%3D%22780%22%20stroke%3D%22%23111%22%20stroke-opacity%3D%22.22%22%20stroke-width%3D%222%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M120%20650H980M160%20240H820%22%20stroke%3D%22%23111%22%20stroke-opacity%3D%22.28%22%20stroke-width%3D%2214%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%22900%22%20cy%3D%22280%22%20r%3D%22120%22%20fill%3D%22%23111%22%20fill-opacity%3D%22.10%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%22120%22%20y%3D%22120%22%20width%3D%2254%22%20height%3D%22160%22%20fill%3D%22%23c1121f%22%20fill-opacity%3D%22.72%22%2F%3E%0A%20%20%20%20%3Ctext%20x%3D%22120%22%20y%3D%22805%22%20font-family%3D%22serif%22%20font-size%3D%2262%22%20fill%3D%22%23111%22%20fill-opacity%3D%22.45%22%3Eobject%20group%204%3C%2Ftext%3E%0A%20%20%3C%2Fsvg%3E" style="object-position:center 50%">
+  </figure><p class="jp-list-kicker jp-red-mark jp-english-zone" style="margin-top:10px">GROUP 4</p><p class="jp-list-note">物件分组。</p></div><div class="jp-frame-inset"><!-- subject map:
+       primary subject: object group 5
+       protected details: full abstract editorial placeholder
+       quiet zones: edges and captions
+       crop risks: none in generated template preview
+       chosen fit: cover
+       chosen object-position: center 50%
+       relation id: object-group-5
+       text relation: image and short title are one grouped unit
+  -->
+  <figure class="jp-photo-zone jp-photo r-1x1 jp-pair-lock" data-image-role="proof" data-relation-id="object-group-5" data-frame-ratio="free" data-fit-decision="cover" style="height:120px" data-slot-id="object-group-5" data-fit="cover" data-safe-focus="center 50%">
+    <img alt="" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201200%20900%22%3E%0A%20%20%20%20%3Crect%20width%3D%221200%22%20height%3D%22900%22%20fill%3D%22%23dedbd2%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%22120%22%20y1%3D%22780%22%20x2%3D%221080%22%20y2%3D%22780%22%20stroke%3D%22%23111%22%20stroke-opacity%3D%22.22%22%20stroke-width%3D%222%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M120%20650H980M160%20240H820%22%20stroke%3D%22%23111%22%20stroke-opacity%3D%22.28%22%20stroke-width%3D%2214%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%22900%22%20cy%3D%22280%22%20r%3D%22120%22%20fill%3D%22%23111%22%20fill-opacity%3D%22.10%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%22120%22%20y%3D%22120%22%20width%3D%2254%22%20height%3D%22160%22%20fill%3D%22%23c1121f%22%20fill-opacity%3D%22.72%22%2F%3E%0A%20%20%20%20%3Ctext%20x%3D%22120%22%20y%3D%22805%22%20font-family%3D%22serif%22%20font-size%3D%2262%22%20fill%3D%22%23111%22%20fill-opacity%3D%22.45%22%3Eobject%20group%205%3C%2Ftext%3E%0A%20%20%3C%2Fsvg%3E" style="object-position:center 50%">
+  </figure><p class="jp-list-kicker jp-red-mark jp-english-zone" style="margin-top:10px">GROUP 5</p><p class="jp-list-note">物件分组。</p></div><div class="jp-frame-inset"><!-- subject map:
+       primary subject: object group 6
+       protected details: full abstract editorial placeholder
+       quiet zones: edges and captions
+       crop risks: none in generated template preview
+       chosen fit: cover
+       chosen object-position: center 50%
+       relation id: object-group-6
+       text relation: image and short title are one grouped unit
+  -->
+  <figure class="jp-photo-zone jp-photo r-1x1 jp-pair-lock" data-image-role="proof" data-relation-id="object-group-6" data-frame-ratio="free" data-fit-decision="cover" style="height:120px" data-slot-id="object-group-6" data-fit="cover" data-safe-focus="center 50%">
+    <img alt="" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201200%20900%22%3E%0A%20%20%20%20%3Crect%20width%3D%221200%22%20height%3D%22900%22%20fill%3D%22%23dedbd2%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%22120%22%20y1%3D%22780%22%20x2%3D%221080%22%20y2%3D%22780%22%20stroke%3D%22%23111%22%20stroke-opacity%3D%22.22%22%20stroke-width%3D%222%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M120%20650H980M160%20240H820%22%20stroke%3D%22%23111%22%20stroke-opacity%3D%22.28%22%20stroke-width%3D%2214%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%22900%22%20cy%3D%22280%22%20r%3D%22120%22%20fill%3D%22%23111%22%20fill-opacity%3D%22.10%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%22120%22%20y%3D%22120%22%20width%3D%2254%22%20height%3D%22160%22%20fill%3D%22%23c1121f%22%20fill-opacity%3D%22.72%22%2F%3E%0A%20%20%20%20%3Ctext%20x%3D%22120%22%20y%3D%22805%22%20font-family%3D%22serif%22%20font-size%3D%2262%22%20fill%3D%22%23111%22%20fill-opacity%3D%22.45%22%3Eobject%20group%206%3C%2Ftext%3E%0A%20%20%3C%2Fsvg%3E" style="object-position:center 50%">
+  </figure><p class="jp-list-kicker jp-red-mark jp-english-zone" style="margin-top:10px">GROUP 6</p><p class="jp-list-note">物件分组。</p></div></div></main>
+    <footer class="jp-page-footer"><p class="jp-meta">J03 / 同类物件分组</p><p class="jp-page jp-red-mark">03 / 8</p></footer>
+  </div>
+</section>
+
+<section id="vertical-04" class="poster vertical" data-template-id="vertical-ruled-hierarchy-list" data-template-source="assets/snippets/vertical/index.html#vertical-ruled-hierarchy-list" data-template-role="object list" data-page-role="object list" data-j-recipe="J05" data-text-mass="ruled rows" data-image-mass="none" data-visual-center="center" data-index-logic="hierarchy" data-risk-note="numbers must mean hierarchy" data-export-name="vertical-04-vertical-ruled-hierarchy-list.png">
+  <div class="paper-grain"></div><div class="content jp-page-grid">
+    <header class="jp-page-header"><p class="jp-issue">整组图主题</p><p class="jp-page jp-red-mark">04 / 8</p></header>
+    <main class="jp-page-main jp-main-balance-center"><div class="jp-grid-span-12"><div class="jp-template-title-zone" data-text-zone="title" data-slot-id="vertical-04-title-1" data-copy-budget="4-18" data-max-lines="2" data-no-orphan-line="true"><h2 class="jp-title-md jp-title-lock">有层级的清单</h2></div><div class="jp-template-quote-zone" data-text-zone="golden-quote" data-slot-id="vertical-04-golden-quote-1" data-copy-budget="8-36" data-max-lines="3" data-no-orphan-line="true"><p class="jp-body" style="margin-top:16px">金句区作为清单的总判断。</p></div><div class="jp-list jp-template-detail-zone" data-text-zone="detail" style="margin-top:30px" data-slot-id="vertical-04-detail-1" data-copy-budget="18-90" data-max-lines="6" data-no-orphan-line="true"><div class="jp-list-row"><p class="jp-list-num jp-red-mark">01</p><div><p class="jp-list-title">观察</p><p class="jp-list-note">hierarchy 不是装饰，而是组织阅读的方式。</p></div></div><div class="jp-list-row"><p class="jp-list-num jp-red-mark">02</p><div><p class="jp-list-title">关联</p><p class="jp-list-note">hierarchy 不是装饰，而是组织阅读的方式。</p></div></div><div class="jp-list-row"><p class="jp-list-num jp-red-mark">03</p><div><p class="jp-list-title">判断</p><p class="jp-list-note">hierarchy 不是装饰，而是组织阅读的方式。</p></div></div></div></div></main>
+    <footer class="jp-page-footer"><p class="jp-meta">J04 / 有层级的清单</p><p class="jp-page jp-red-mark">04 / 8</p></footer>
+  </div>
+</section>
+
+<section id="vertical-05" class="poster vertical" data-template-id="vertical-image-row-note-list" data-template-source="assets/snippets/vertical/index.html#vertical-image-row-note-list" data-template-role="observation" data-page-role="observation" data-j-recipe="J08" data-text-mass="bottom note rows" data-image-mass="upper image sequence" data-visual-center="slightly lower" data-index-logic="time" data-risk-note="top group and bottom group must align" data-export-name="vertical-05-vertical-image-row-note-list.png">
+  <div class="paper-grain"></div><div class="content jp-page-grid">
+    <header class="jp-page-header"><p class="jp-issue">整组图主题</p><p class="jp-page jp-red-mark">05 / 8</p></header>
+    <main class="jp-page-main jp-main-balance-lower"><!-- subject map:
+       primary subject: upper image sequence
+       protected details: full abstract editorial placeholder
+       quiet zones: edges and captions
+       crop risks: none in generated template preview
+       chosen fit: cover
+       chosen object-position: center 50%
+       relation id: upper-image-sequence
+       text relation: upper image group maps to lower note group
+  -->
+  <figure class="jp-photo-zone jp-grid-span-12 jp-photo r-3x2 jp-pair-lock" data-image-role="proof" data-relation-id="upper-image-sequence" data-frame-ratio="free" data-fit-decision="cover" style="height:360px" data-slot-id="upper-image-sequence" data-fit="cover" data-safe-focus="center 50%">
+    <img alt="" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201200%20900%22%3E%0A%20%20%20%20%3Crect%20width%3D%221200%22%20height%3D%22900%22%20fill%3D%22%23dedbd2%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%22120%22%20y1%3D%22780%22%20x2%3D%221080%22%20y2%3D%22780%22%20stroke%3D%22%23111%22%20stroke-opacity%3D%22.22%22%20stroke-width%3D%222%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M120%20650H980M160%20240H820%22%20stroke%3D%22%23111%22%20stroke-opacity%3D%22.28%22%20stroke-width%3D%2214%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%22900%22%20cy%3D%22280%22%20r%3D%22120%22%20fill%3D%22%23111%22%20fill-opacity%3D%22.10%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%22120%22%20y%3D%22120%22%20width%3D%2254%22%20height%3D%22160%22%20fill%3D%22%23c1121f%22%20fill-opacity%3D%22.72%22%2F%3E%0A%20%20%20%20%3Ctext%20x%3D%22120%22%20y%3D%22805%22%20font-family%3D%22serif%22%20font-size%3D%2262%22%20fill%3D%22%23111%22%20fill-opacity%3D%22.45%22%3Eupper%20image%20sequence%3C%2Ftext%3E%0A%20%20%3C%2Fsvg%3E" style="object-position:center 50%">
+  </figure><div class="jp-grid-span-12"><div class="jp-template-title-zone" data-text-zone="title" data-slot-id="vertical-05-title-1" data-copy-budget="4-18" data-max-lines="2" data-no-orphan-line="true"><p class="jp-meta jp-red-mark">IMAGE GROUP / TEXT GROUP</p></div><div class="jp-template-quote-zone" data-text-zone="golden-quote" data-slot-id="vertical-05-golden-quote-1" data-copy-budget="8-36" data-max-lines="3" data-no-orphan-line="true"><p class="jp-body" style="margin:12px 0 18px">金句区承接上方图片组。</p></div><div class="jp-list jp-template-detail-zone" data-text-zone="detail" data-slot-id="vertical-05-detail-1" data-copy-budget="18-90" data-max-lines="6" data-no-orphan-line="true"><div class="jp-list-row"><p class="jp-list-num jp-red-mark">01</p><div><p class="jp-list-title">观察</p><p class="jp-list-note">time 不是装饰，而是组织阅读的方式。</p></div></div><div class="jp-list-row"><p class="jp-list-num jp-red-mark">02</p><div><p class="jp-list-title">关联</p><p class="jp-list-note">time 不是装饰，而是组织阅读的方式。</p></div></div><div class="jp-list-row"><p class="jp-list-num jp-red-mark">03</p><div><p class="jp-list-title">判断</p><p class="jp-list-note">time 不是装饰，而是组织阅读的方式。</p></div></div></div></div></main>
+    <footer class="jp-page-footer"><p class="jp-meta">J05 / 上图下文分组</p><p class="jp-page jp-red-mark">05 / 8</p></footer>
+  </div>
+</section>
+
+<section id="vertical-06" class="poster vertical" data-template-id="vertical-equal-photo-voice-note" data-template-source="assets/snippets/vertical/index.html#vertical-equal-photo-voice-note" data-template-role="quote" data-page-role="quote" data-j-recipe="J06" data-text-mass="spacious quote note" data-image-mass="equal height source image" data-visual-center="center paired" data-index-logic="none" data-risk-note="text and image must share height and center line" data-export-name="vertical-06-vertical-equal-photo-voice-note.png">
+  <div class="paper-grain"></div><div class="content jp-page-grid">
+    <header class="jp-page-header"><p class="jp-issue">整组图主题</p><p class="jp-page jp-red-mark">06 / 8</p></header>
+    <main class="jp-page-main jp-main-balance-center" style="align-items:center"><!-- subject map:
+       primary subject: equal height voice source image
+       protected details: full abstract editorial placeholder
+       quiet zones: edges and captions
+       crop risks: none in generated template preview
+       chosen fit: cover
+       chosen object-position: center 50%
+       relation id: equal-height-voice-source-image
+       text relation: left image and right voice field use a locked two-column relation with the same height and center line
+  -->
+  <figure class="jp-photo-zone jp-grid-span-6 jp-photo r-3x4 jp-pair-lock" data-image-role="proof" data-relation-id="equal-height-voice-source-image" data-frame-ratio="free" data-fit-decision="cover" style="height:760px" data-slot-id="equal-height-voice-source-image" data-fit="cover" data-safe-focus="center 50%">
+    <img alt="" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201200%20900%22%3E%0A%20%20%20%20%3Crect%20width%3D%221200%22%20height%3D%22900%22%20fill%3D%22%23dedbd2%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%22120%22%20y1%3D%22780%22%20x2%3D%221080%22%20y2%3D%22780%22%20stroke%3D%22%23111%22%20stroke-opacity%3D%22.22%22%20stroke-width%3D%222%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M120%20650H980M160%20240H820%22%20stroke%3D%22%23111%22%20stroke-opacity%3D%22.28%22%20stroke-width%3D%2214%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%22900%22%20cy%3D%22280%22%20r%3D%22120%22%20fill%3D%22%23111%22%20fill-opacity%3D%22.10%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%22120%22%20y%3D%22120%22%20width%3D%2254%22%20height%3D%22160%22%20fill%3D%22%23c1121f%22%20fill-opacity%3D%22.72%22%2F%3E%0A%20%20%20%20%3Ctext%20x%3D%22120%22%20y%3D%22805%22%20font-family%3D%22serif%22%20font-size%3D%2262%22%20fill%3D%22%23111%22%20fill-opacity%3D%22.45%22%3Eequal%20height%20voice%20source%20image%3C%2Ftext%3E%0A%20%20%3C%2Fsvg%3E" style="object-position:center 50%">
+  </figure><article class="jp-grid-span-6 jp-frame-inset jp-pair-lock" data-relation-id="equal-height-voice-source-image" style="min-height:760px;display:grid;grid-template-rows:auto auto 1fr;gap:34px;padding:48px 50px;text-align:right"><div class="jp-template-title-zone" data-text-zone="title" data-copy-budget="4-16" data-relation-id="equal-height-voice-source-image" style="width:100%;justify-self:end" data-slot-id="vertical-06-title-1" data-max-lines="2" data-no-orphan-line="true"><p class="jp-meta jp-red-mark">VOICE FIELD</p><h2 class="jp-title-md jp-title-lock" style="margin-top:18px;font-size:44px;line-height:1.12">声画同高</h2><p class="jp-cap jp-english-zone" style="margin-top:18px;width:100%;text-transform:uppercase">Image and text answer each other on one quiet center line.</p></div><div class="jp-template-quote-zone" data-text-zone="golden-quote" data-copy-budget="8-18" data-relation-id="equal-height-voice-source-image" style="width:100%;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:30px 0" data-slot-id="vertical-06-golden-quote-1" data-max-lines="3" data-no-orphan-line="true"><p class="jp-lead" style="width:100%;white-space:nowrap;font-size:30px;line-height:1.45">金句区压住中心线</p></div><div class="jp-template-detail-zone" data-text-zone="detail" data-copy-budget="28-90" data-relation-id="equal-height-voice-source-image" style="width:100%;align-self:start;justify-self:end;text-align:right" data-slot-id="vertical-06-detail-1" data-max-lines="6" data-no-orphan-line="true"><p class="jp-detail-micro-heading jp-red-mark">LANGUAGE NOTES</p><p class="jp-detail-micro-copy">中文：保留语气、出处与判断依据。</p><p class="jp-detail-micro-copy jp-english-zone" style="margin-top:10px">English: Keep the source voice, context, and editorial note.</p><p class="jp-detail-micro-copy" lang="ja" style="margin-top:10px">日本語：声の調子、文脈、補足を短く残す。</p></div></article></main>
+    <footer class="jp-page-footer"><p class="jp-meta">J06 / 让声音成为主图</p><p class="jp-page jp-red-mark">06 / 8</p></footer>
+  </div>
+</section>
+
+<section id="vertical-07" class="poster vertical" data-template-id="vertical-before-after-cards" data-template-source="assets/snippets/vertical/index.html#vertical-before-after-cards" data-template-role="comparison" data-page-role="comparison" data-j-recipe="J10" data-text-mass="paired statements" data-image-mass="none" data-visual-center="center" data-index-logic="comparison" data-risk-note="two sides must mirror weight" data-export-name="vertical-07-vertical-before-after-cards.png">
+  <div class="paper-grain"></div><div class="content jp-page-grid">
+    <header class="jp-page-header"><p class="jp-issue">整组图主题</p><p class="jp-page jp-red-mark">07 / 8</p></header>
+    <main class="jp-page-main jp-main-balance-lower" style="padding-top:320px"><div class="jp-grid-span-6 jp-frame-inset"><div class="jp-template-title-zone" data-text-zone="title" data-slot-id="vertical-07-title-1" data-copy-budget="4-18" data-max-lines="2" data-no-orphan-line="true"><p class="jp-meta jp-red-mark">TITLE A</p><h2 class="jp-title-md jp-title-lock" style="margin-top:18px">对照标题。</h2></div><div class="jp-template-quote-zone" data-text-zone="golden-quote" data-slot-id="vertical-07-golden-quote-1" data-copy-budget="8-36" data-max-lines="3" data-no-orphan-line="true"><p class="jp-body" style="margin-top:18px">左侧金句区。</p></div><div class="jp-template-detail-zone" data-text-zone="detail" data-slot-id="vertical-07-detail-1" data-copy-budget="18-90" data-max-lines="6" data-no-orphan-line="true"><p class="jp-list-note" style="margin-top:12px">详细内容解释左侧判断依据。</p></div></div><div class="jp-grid-span-6 jp-frame-inset"><div class="jp-template-title-zone" data-text-zone="title" data-slot-id="vertical-07-title-2" data-copy-budget="4-18" data-max-lines="2" data-no-orphan-line="true"><p class="jp-meta jp-red-mark">TITLE B</p><h2 class="jp-title-md jp-title-lock" style="margin-top:18px">对照标题。</h2></div><div class="jp-template-quote-zone" data-text-zone="golden-quote" data-slot-id="vertical-07-golden-quote-2" data-copy-budget="8-36" data-max-lines="3" data-no-orphan-line="true"><p class="jp-body" style="margin-top:18px">右侧金句区。</p></div><div class="jp-template-detail-zone" data-text-zone="detail" data-slot-id="vertical-07-detail-2" data-copy-budget="18-90" data-max-lines="6" data-no-orphan-line="true"><p class="jp-list-note" style="margin-top:12px">详细内容解释右侧判断依据。</p></div></div></main>
+    <footer class="jp-page-footer"><p class="jp-meta">J07 / 重心前后对照</p><p class="jp-page jp-red-mark">07 / 8</p></footer>
+  </div>
+</section>
+
+<section id="vertical-08" class="poster vertical" data-template-id="vertical-square-photo-board" data-template-source="assets/snippets/vertical/index.html#vertical-square-photo-board" data-template-role="observation" data-page-role="observation" data-j-recipe="J08" data-text-mass="caption cards" data-image-mass="square photo mosaic" data-visual-center="center" data-index-logic="none" data-risk-note="mosaic must not become random collage" data-export-name="vertical-08-vertical-square-photo-board.png">
+  <div class="paper-grain"></div><div class="content jp-page-grid">
+    <header class="jp-page-header"><p class="jp-issue">整组图主题</p><p class="jp-page jp-red-mark">08 / 8</p></header>
+    <main class="jp-page-main jp-main-balance-center"><div class="jp-grid-span-12" style="display:grid;grid-template-columns:repeat(2,1fr);gap:18px"><!-- subject map:
+       primary subject: square scene 1
+       protected details: full abstract editorial placeholder
+       quiet zones: edges and captions
+       crop risks: none in generated template preview
+       chosen fit: cover
+       chosen object-position: center 50%
+       relation id: square-scene-1
+       text relation: square board preserves environment information
+  -->
+  <figure class="jp-photo-zone jp-photo r-1x1 jp-pair-lock" data-image-role="proof" data-relation-id="square-scene-1" data-frame-ratio="1:1" data-fit-decision="cover"  data-slot-id="square-scene-1" data-fit="cover" data-safe-focus="center 50%">
+    <img alt="" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201200%20900%22%3E%0A%20%20%20%20%3Crect%20width%3D%221200%22%20height%3D%22900%22%20fill%3D%22%23dedbd2%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%22120%22%20y1%3D%22780%22%20x2%3D%221080%22%20y2%3D%22780%22%20stroke%3D%22%23111%22%20stroke-opacity%3D%22.22%22%20stroke-width%3D%222%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M120%20650H980M160%20240H820%22%20stroke%3D%22%23111%22%20stroke-opacity%3D%22.28%22%20stroke-width%3D%2214%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%22900%22%20cy%3D%22280%22%20r%3D%22120%22%20fill%3D%22%23111%22%20fill-opacity%3D%22.10%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%22120%22%20y%3D%22120%22%20width%3D%2254%22%20height%3D%22160%22%20fill%3D%22%23c1121f%22%20fill-opacity%3D%22.72%22%2F%3E%0A%20%20%20%20%3Ctext%20x%3D%22120%22%20y%3D%22805%22%20font-family%3D%22serif%22%20font-size%3D%2262%22%20fill%3D%22%23111%22%20fill-opacity%3D%22.45%22%3Esquare%20scene%201%3C%2Ftext%3E%0A%20%20%3C%2Fsvg%3E" style="object-position:center 50%">
+  </figure><!-- subject map:
+       primary subject: square scene 2
+       protected details: full abstract editorial placeholder
+       quiet zones: edges and captions
+       crop risks: none in generated template preview
+       chosen fit: cover
+       chosen object-position: center 50%
+       relation id: square-scene-2
+       text relation: square board preserves environment information
+  -->
+  <figure class="jp-photo-zone jp-photo r-1x1 jp-pair-lock" data-image-role="proof" data-relation-id="square-scene-2" data-frame-ratio="1:1" data-fit-decision="cover"  data-slot-id="square-scene-2" data-fit="cover" data-safe-focus="center 50%">
+    <img alt="" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201200%20900%22%3E%0A%20%20%20%20%3Crect%20width%3D%221200%22%20height%3D%22900%22%20fill%3D%22%23dedbd2%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%22120%22%20y1%3D%22780%22%20x2%3D%221080%22%20y2%3D%22780%22%20stroke%3D%22%23111%22%20stroke-opacity%3D%22.22%22%20stroke-width%3D%222%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M120%20650H980M160%20240H820%22%20stroke%3D%22%23111%22%20stroke-opacity%3D%22.28%22%20stroke-width%3D%2214%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%22900%22%20cy%3D%22280%22%20r%3D%22120%22%20fill%3D%22%23111%22%20fill-opacity%3D%22.10%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%22120%22%20y%3D%22120%22%20width%3D%2254%22%20height%3D%22160%22%20fill%3D%22%23c1121f%22%20fill-opacity%3D%22.72%22%2F%3E%0A%20%20%20%20%3Ctext%20x%3D%22120%22%20y%3D%22805%22%20font-family%3D%22serif%22%20font-size%3D%2262%22%20fill%3D%22%23111%22%20fill-opacity%3D%22.45%22%3Esquare%20scene%202%3C%2Ftext%3E%0A%20%20%3C%2Fsvg%3E" style="object-position:center 50%">
+  </figure><!-- subject map:
+       primary subject: square scene 3
+       protected details: full abstract editorial placeholder
+       quiet zones: edges and captions
+       crop risks: none in generated template preview
+       chosen fit: cover
+       chosen object-position: center 50%
+       relation id: square-scene-3
+       text relation: square board preserves environment information
+  -->
+  <figure class="jp-photo-zone jp-photo r-1x1 jp-pair-lock" data-image-role="proof" data-relation-id="square-scene-3" data-frame-ratio="1:1" data-fit-decision="cover"  data-slot-id="square-scene-3" data-fit="cover" data-safe-focus="center 50%">
+    <img alt="" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201200%20900%22%3E%0A%20%20%20%20%3Crect%20width%3D%221200%22%20height%3D%22900%22%20fill%3D%22%23dedbd2%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%22120%22%20y1%3D%22780%22%20x2%3D%221080%22%20y2%3D%22780%22%20stroke%3D%22%23111%22%20stroke-opacity%3D%22.22%22%20stroke-width%3D%222%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M120%20650H980M160%20240H820%22%20stroke%3D%22%23111%22%20stroke-opacity%3D%22.28%22%20stroke-width%3D%2214%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%22900%22%20cy%3D%22280%22%20r%3D%22120%22%20fill%3D%22%23111%22%20fill-opacity%3D%22.10%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%22120%22%20y%3D%22120%22%20width%3D%2254%22%20height%3D%22160%22%20fill%3D%22%23c1121f%22%20fill-opacity%3D%22.72%22%2F%3E%0A%20%20%20%20%3Ctext%20x%3D%22120%22%20y%3D%22805%22%20font-family%3D%22serif%22%20font-size%3D%2262%22%20fill%3D%22%23111%22%20fill-opacity%3D%22.45%22%3Esquare%20scene%203%3C%2Ftext%3E%0A%20%20%3C%2Fsvg%3E" style="object-position:center 50%">
+  </figure><!-- subject map:
+       primary subject: square scene 4
+       protected details: full abstract editorial placeholder
+       quiet zones: edges and captions
+       crop risks: none in generated template preview
+       chosen fit: cover
+       chosen object-position: center 50%
+       relation id: square-scene-4
+       text relation: square board preserves environment information
+  -->
+  <figure class="jp-photo-zone jp-photo r-1x1 jp-pair-lock" data-image-role="proof" data-relation-id="square-scene-4" data-frame-ratio="1:1" data-fit-decision="cover"  data-slot-id="square-scene-4" data-fit="cover" data-safe-focus="center 50%">
+    <img alt="" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201200%20900%22%3E%0A%20%20%20%20%3Crect%20width%3D%221200%22%20height%3D%22900%22%20fill%3D%22%23dedbd2%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%22120%22%20y1%3D%22780%22%20x2%3D%221080%22%20y2%3D%22780%22%20stroke%3D%22%23111%22%20stroke-opacity%3D%22.22%22%20stroke-width%3D%222%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M120%20650H980M160%20240H820%22%20stroke%3D%22%23111%22%20stroke-opacity%3D%22.28%22%20stroke-width%3D%2214%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%22900%22%20cy%3D%22280%22%20r%3D%22120%22%20fill%3D%22%23111%22%20fill-opacity%3D%22.10%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%22120%22%20y%3D%22120%22%20width%3D%2254%22%20height%3D%22160%22%20fill%3D%22%23c1121f%22%20fill-opacity%3D%22.72%22%2F%3E%0A%20%20%20%20%3Ctext%20x%3D%22120%22%20y%3D%22805%22%20font-family%3D%22serif%22%20font-size%3D%2262%22%20fill%3D%22%23111%22%20fill-opacity%3D%22.45%22%3Esquare%20scene%204%3C%2Ftext%3E%0A%20%20%3C%2Fsvg%3E" style="object-position:center 50%">
+  </figure></div><div class="jp-grid-span-12" style="display:grid;grid-template-columns:1fr 1fr;gap:24px"><div><div class="jp-template-title-zone" data-text-zone="title" data-slot-id="vertical-08-title-1" data-copy-budget="4-18" data-max-lines="2" data-no-orphan-line="true"><h2 class="jp-title-md jp-title-lock">四方版讲环境</h2></div><div class="jp-template-quote-zone" data-text-zone="golden-quote" data-slot-id="vertical-08-golden-quote-1" data-copy-budget="8-36" data-max-lines="3" data-no-orphan-line="true"><p class="jp-body" style="margin-top:16px">金句区总结图片组。</p></div></div><div class="jp-template-detail-zone" data-text-zone="detail" data-slot-id="vertical-08-detail-1" data-copy-budget="18-90" data-max-lines="6" data-no-orphan-line="true"><p class="jp-body">详细内容承载场景、人物与来源。</p><p class="jp-cap jp-english-zone" style="margin-top:10px">Detail zone may include English or Japanese notes.</p></div></div></main>
+    <footer class="jp-page-footer"><p class="jp-meta">J08 / 四方版讲环境</p><p class="jp-page jp-red-mark">08 / 8</p></footer>
+  </div>
+</section>
+  </main>
+</body>
+</html>

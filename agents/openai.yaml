@@ -1,0 +1,4 @@
+interface:
+  display_name: "Japanese Magazine Poster"
+  short_description: "Generate fixed-layout magazine poster HTML and PNG."
+  default_prompt: "Use $jp-magazine-poster to turn my topic or text into Japanese magazine style poster HTML and PNG."
